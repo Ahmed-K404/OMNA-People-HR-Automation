@@ -1,0 +1,316 @@
+{
+  "name": "RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Upload policy documents",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Policy_file",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf,.docx,.txt",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0f79e2bc-51e8-4628-8329-5099df0ad79a",
+      "name": "Upload policy documents",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "c4c28248-bd56-444b-b275-cd909684d4f6"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": "hr_policies",
+        "clearStore": true
+      },
+      "id": "8f9d6129-027d-4492-8e12-536453490387",
+      "name": "Add to knowledge base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "id": "f09d3a26-1a49-4885-aed9-3e57bc29a814",
+      "name": "Read uploaded file",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        400,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "03f2d4af-90d5-44ad-b98f-d34317ef9fba",
+      "name": "Split into chunks",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        400,
+        320
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1ef6237a-599b-4e6c-8a3d-a20329836c91",
+      "name": "Gemini Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        256,
+        480
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "g5CCBxUgfSWKUwCY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are an HR assistant. Answer employee questions based solely on company policies by using the HR policy search tool. If you cannot find the answer in the policies, state this clearly and direct the employee to the HR department. Respond in the same language as the question. answert with the same lang that user use"
+        }
+      },
+      "id": "f280d1e3-f9e7-4c9e-aa42-a4d3f09670eb",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "{{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "id": "50c9a5e4-6297-4564-b8a5-ae1a47beb2e3",
+      "name": "Conversation memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "search",
+        "toolDescription": "This tool is used to search HR policies. You must provide the search query using the parameter name \"input\". Do not use \"Query\".",
+        "memoryKey": "hr_policies",
+        "topK": 10
+      },
+      "id": "13de9174-707e-43ba-97d0-872d5fef9b19",
+      "name": "Search HR policies",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "https://ahmed-k404.github.io/",
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        0
+      ],
+      "id": "8ff54af4-0678-4465-9670-bf6ef6641fc3",
+      "name": "When chat message received",
+      "webhookId": "0c4e52e2-6517-48e9-9619-a048bebe4d53"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1552,
+        0
+      ],
+      "id": "0ec18778-383b-494a-bd00-62dfc2b07a41",
+      "name": "Chat",
+      "webhookId": "bfac4762-788b-4187-84d8-36011c5dd83f"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        208
+      ],
+      "id": "f5eafd0b-3986-47ca-9e99-99a0e8eed045",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "lRgIMX1ImTZPnvYX",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Upload policy documents": {
+      "main": [
+        [
+          {
+            "node": "Add to knowledge base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read uploaded file": {
+      "ai_document": [
+        [
+          {
+            "node": "Add to knowledge base",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split into chunks": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Read uploaded file",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Add to knowledge base",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Search HR policies",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search HR policies": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Africa/Cairo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "a9cad118-aedb-4932-901c-a740e22fe92d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b9acf71039ef36b88f4eb3fe1e2af477631bf23d1b204e6d6aa5e6eba82093f1"
+  },
+  "nodeGroups": [],
+  "id": "lUTNYlXNmVugERh1",
+  "tags": []
+}
