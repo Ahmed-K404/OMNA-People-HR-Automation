@@ -146,7 +146,7 @@
     <section class="card">
       <h2>Ask HR</h2>
       <div id="chatBox" class="chat-box">
-        <div class="msg bot">أهلاً بك! اسألني أي سؤال يخص سياسات الموارد البشرية والإجازات.</div>
+        <div class="msg bot">Welcome! Ask me any questions regarding human resources and leave policies.</div>
       </div>
       <form id="chatForm" class="input-row">
         <input id="questionInput" type="text" placeholder="How many leave days do I get?" required />
@@ -198,7 +198,7 @@
       addMessage(text, "user");
       questionInput.value = "";
       sendBtn.disabled = true;
-      const loadingMsg = addMessage("جاري التفكير...", "bot");
+      const loadingMsg = addMessage("I'm thinking...", "bot");
 
       try {
         const response = await fetch(CONFIG.n8nBase + CONFIG.chat, {
@@ -221,7 +221,7 @@
         const reply = data.output || data.text || data.response || JSON.stringify(data);
         loadingMsg.textContent = reply;
       } catch (err) {
-        loadingMsg.textContent = "خطأ في الاتصال بالسيرفر. تأكد أن n8n و ngrok يعملان.";
+        loadingMsg.textContent = "Server connection error. Please ensure that n8n and ngrok are working.";
       } finally {
         sendBtn.disabled = false;
       }
