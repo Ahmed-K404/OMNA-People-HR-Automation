@@ -163,69 +163,69 @@
     </section>
   </div>
 
-  <script>
-    const CONFIG = {
-      n8nBase: "https://fax-snide-semisweet.ngrok-free.dev",
-      chat: "https://fax-snide-semisweet.ngrok-free.dev/webhook/0c4e52e2-6517-48e9-9619-a048bebe4d53/chat",
-      applyForm: "https://fax-snide-semisweet.ngrok-free.dev/form/4291160f-7d7d-48cd-92b0-bc8684992f37",
-      coachForm: "https://fax-snide-semisweet.ngrok-free.dev/form/78132e28-3970-44c7-8ce8-03d4b74ee635"
-    };
+ <script>
+      const CONFIG = {
+        chat: "https://fax-snide-semisweet.ngrok-free.dev/webhook/0c4e52e2-6517-48e9-9619-a048bebe4d53/chat",
+        applyForm: "https://fax-snide-semisweet.ngrok-free.dev/form/4291160f-7d7d-48cd-92b0-bc8684992f37",
+        coachForm: "https://fax-snide-semisweet.ngrok-free.dev/form/78132e28-3970-44c7-8ce8-03d4b74ee635"
+      };
 
-    document.getElementById("applyLink").href = CONFIG.n8nBase + CONFIG.applyForm;
-    document.getElementById("coachLink").href = CONFIG.n8nBase + CONFIG.coachForm;
+      // تعيين الروابط مباشرة بدون دمج عشان ما تبوظش
+      document.getElementById("applyLink").href = CONFIG.applyForm;
+      document.getElementById("coachLink").href = CONFIG.coachForm;
 
-    const chatBox = document.getElementById("chatBox");
-    const chatForm = document.getElementById("chatForm");
-    const questionInput = document.getElementById("questionInput");
-    const sendBtn = document.getElementById("sendBtn");
+      const chatBox = document.getElementById("chatBox");
+      const chatForm = document.getElementById("chatForm");
+      const questionInput = document.getElementById("questionInput");
+      const sendBtn = document.getElementById("sendBtn");
 
-    const sessionId = "session-" + Math.random().toString(36).substring(2, 10);
+      const sessionId = "session-" + Math.random().toString(36).substring(2, 10);
 
-    function addMessage(text, sender) {
-      const div = document.createElement("div");
-      div.className = "msg " + sender;
-      div.textContent = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return div;
-    }
-
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const text = questionInput.value.trim();
-      if (!text) return;
-
-      addMessage(text, "user");
-      questionInput.value = "";
-      sendBtn.disabled = true;
-      const loadingMsg = addMessage("I'm thinking...", "bot");
-
-      try {
-        const response = await fetch(CONFIG.n8nBase + CONFIG.chat, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true"
-          },
-          body: JSON.stringify({
-            chatInput: text,
-            sessionId: sessionId
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const reply = data.output || data.text || data.response || JSON.stringify(data);
-        loadingMsg.textContent = reply;
-      } catch (err) {
-        loadingMsg.textContent = "Server connection error. Please ensure that n8n and ngrok are working.";
-      } finally {
-        sendBtn.disabled = false;
+      function addMessage(text, sender) {
+        const div = document.createElement("div");
+        div.className = "msg " + sender;
+        div.textContent = text;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return div;
       }
-    });
-  </script>
+
+      chatForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = questionInput.value.trim();
+        if (!text) return;
+
+        addMessage(text, "user");
+        questionInput.value = "";
+        sendBtn.disabled = true;
+        const loadingMsg = addMessage("جاري التفكير...", "bot");
+
+        try {
+          const response = await fetch(CONFIG.chat, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true"
+            },
+            body: JSON.stringify({
+              chatInput: text,
+              sessionId: sessionId
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const reply = data.output || data.text || data.response || JSON.stringify(data);
+          loadingMsg.textContent = reply;
+        } catch (err) {
+          loadingMsg.textContent = "خطأ في الاتصال بالسيرفر. تأكد أن n8n و ngrok يعملان.";
+        } finally {
+          sendBtn.disabled = false;
+        }
+      });
+    </script>
 </body>
 </html>
